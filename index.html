@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>نظام علي عوض لإدارة الطلاب</title>
+<style>
+:root{--blue:#174ea6;--blue2:#2563eb;--ink:#172033;--muted:#64748b;--bg:#f3f6fb;--line:#e2e8f0;--green:#15803d;--red:#b91c1c}
+*{box-sizing:border-box}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:linear-gradient(120deg,#123b7a,#2563eb);color:white;padding:28px 22px}
+.head{max-width:1400px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}
+h1{margin:0 0 8px;font-size:clamp(24px,3vw,36px)}header p{margin:0;color:#dbeafe}
+.wrap{max-width:1400px;margin:22px auto;padding:0 18px 32px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(150px,1fr));gap:14px;margin-bottom:18px}
+.stat,.panel{background:white;border:1px solid var(--line);border-radius:16px;box-shadow:0 5px 18px #0f172a08}
+.stat{padding:18px}.stat span{display:block;color:var(--muted);font-size:14px;margin-bottom:10px}.stat strong{font-size:27px}
+.layout{display:grid;grid-template-columns:minmax(320px,390px) minmax(0,1fr);gap:18px;align-items:start}
+.panel{padding:20px}.panel h2{font-size:21px;margin:0 0 18px}
+label{display:block;font-size:14px;font-weight:bold;margin:12px 0 7px}
+input,select{width:100%;padding:11px 12px;border:1px solid #cbd5e1;border-radius:10px;font:inherit;background:white;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--blue2);box-shadow:0 0 0 3px #2563eb18}
+.grades{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}
+button,.file-label{border:0;border-radius:10px;padding:11px 14px;font:inherit;font-weight:bold;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.primary{background:var(--blue2);color:white}.primary:hover{background:#1d4ed8}.secondary{background:#e8efff;color:#1d4ed8}.danger{background:#fee2e2;color:#991b1b}.neutral{background:#eef2f7;color:#334155}
+.actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}.actions button{flex:1}
+.tools{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}.tools input{flex:1;min-width:180px}.tools select{width:auto;min-width:155px}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{width:100%;border-collapse:collapse;min-width:790px;background:white}
+th,td{padding:12px 10px;text-align:right;border-bottom:1px solid var(--line);font-size:14px;white-space:nowrap}
+th{background:#f8fafc;color:#475569;font-weight:bold}tbody tr:hover{background:#f8fbff}tbody tr:last-child td{border-bottom:0}
+.pill{display:inline-block;border-radius:999px;padding:5px 9px;font-size:12px;font-weight:bold}.pass{background:#dcfce7;color:#166534}.fail{background:#fee2e2;color:#991b1b}
+.row-actions{display:flex;gap:6px}.row-actions button{padding:7px 9px;font-size:12px}
+.empty{text-align:center;padding:28px;color:var(--muted)}
+.note{font-size:12px;color:var(--muted);line-height:1.8;margin-top:10px}
+footer{text-align:center;color:var(--muted);font-size:12px;padding:10px}
+#fileInput{display:none}.message{display:none;padding:11px 13px;border-radius:10px;margin-bottom:14px;font-size:14px}.message.show{display:block}.message.ok{background:#dcfce7;color:#166534}.message.err{background:#fee2e2;color:#991b1b}
+@media(max-width:900px){.layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:480px){.wrap{padding:0 10px 24px}.panel{padding:14px}.stats{gap:9px}.stat{padding:13px}.stat strong{font-size:23px}.grades{grid-template-columns:1fr 1fr}.head{align-items:flex-start}}
+
+.login-screen{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#0f2f65,#2563eb);display:flex;align-items:center;justify-content:center;padding:20px}
+.login-card{width:min(100%,420px);background:#fff;border-radius:22px;padding:30px;box-shadow:0 24px 70px #0003;text-align:right}
+.login-logo{width:64px;height:64px;border-radius:18px;background:#e0eaff;color:#174ea6;display:grid;place-items:center;font-size:32px;margin:0 auto 14px}
+.login-card h2{text-align:center;margin:0 0 8px;font-size:25px}.login-card .sub{text-align:center;color:#64748b;margin:0 0 22px;font-size:14px}
+.login-card button{width:100%;margin-top:18px}.login-error{display:none;color:#991b1b;background:#fee2e2;padding:10px;border-radius:9px;margin-top:12px;font-size:13px}
+.login-help{font-size:12px;color:#64748b;line-height:1.8;margin-top:16px}.logout-btn{background:#fff;color:#174ea6;border:1px solid #bfdbfe}
+@media(max-width:480px){.login-card{padding:22px}}
+
+</style>
+</head>
+<body>
+
+<div class="login-screen" id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">🎓</div>
+    <h2>تسجيل دخول الأدمن</h2>
+    <p class="sub">نظام علي عوض لإدارة الطلاب</p>
+    <form id="loginForm">
+      <label for="adminUser">البريد الإلكتروني</label>
+      <input id="adminUser" type="email" autocomplete="username" required placeholder="البريد الإلكتروني لحساب Supabase">
+      <label for="adminPass">كلمة المرور</label>
+      <input id="adminPass" type="password" autocomplete="current-password" required placeholder="كلمة المرور">
+      <button class="primary" type="submit">دخول إلى لوحة الإدارة</button>
+      <div class="login-error" id="loginError" role="alert">تعذّر تسجيل الدخول. تأكد من البريد الإلكتروني وكلمة المرور.</div>
+    </form>
+    <p class="login-help">سجّل الدخول باستخدام البريد الإلكتروني وكلمة المرور لحساب أنشأته في Supabase Authentication.</p>
+  </div>
+</div>
+
+<header><div class="head"><div><h1>🎓 نظام علي عوض لإدارة الطلاب</h1><p>إدارة الأسماء والأرقام والعلامات والمعدلات بسهولة</p></div><div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><span>📚 إدارة مدرسية</span><button class="logout-btn" id="logoutBtn" type="button">تسجيل الخروج</button></div></div></header>
+<main class="wrap">
+  <section class="stats">
+    <div class="stat"><span>عدد الطلاب</span><strong id="count">0</strong></div>
+    <div class="stat"><span>معدل الصف</span><strong id="classAverage">0.00</strong></div>
+    <div class="stat"><span>عدد الناجحين</span><strong id="passed">0</strong></div>
+    <div class="stat"><span>عدد الراسبين</span><strong id="failed">0</strong></div>
+  </section>
+  <div id="message" class="message" role="status"></div>
+  <section class="layout">
+    <div class="panel">
+      <h2 id="formTitle">➕ إضافة طالب جديد</h2>
+      <form id="studentForm">
+        <label for="studentId">رقم الطالب</label><input id="studentId" required inputmode="numeric" placeholder="مثال: 101" maxlength="30">
+        <label for="studentName">اسم الطالب</label><input id="studentName" required placeholder="اكتب اسم الطالب" maxlength="100">
+        <h3 style="font-size:16px;margin:20px 0 4px">علامات المواد (من 100)</h3>
+        <div class="grades">
+          <div><label for="math">رياضيات</label><input id="math" type="number" min="0" max="100" step="0.01" value="0" required></div>
+          <div><label for="english">إنجليزي</label><input id="english" type="number" min="0" max="100" step="0.01" value="0" required></div>
+          <div><label for="arabic">عربي</label><input id="arabic" type="number" min="0" max="100" step="0.01" value="0" required></div>
+          <div><label for="science">علوم</label><input id="science" type="number" min="0" max="100" step="0.01" value="0" required></div>
+          <div><label for="computer">حاسوب</label><input id="computer" type="number" min="0" max="100" step="0.01" value="0" required></div>
+        </div>
+        <div class="actions"><button class="primary" type="submit" id="saveBtn">حفظ الطالب</button><button class="neutral" type="button" id="cancelEdit" hidden>إلغاء التعديل</button></div>
+      </form>
+      <hr style="border:0;border-top:1px solid var(--line);margin:22px 0">
+      <h2>💾 النسخ الاحتياطي</h2>
+      <div class="actions"><button class="secondary" id="exportBtn" type="button">تصدير نسخة احتياطية</button><button class="secondary" id="importBtn" type="button">استيراد نسخة</button><input id="fileInput" type="file" accept=".json,application/json"></div>
+      <p class="note">يتم حفظ الطلاب في قاعدة بيانات Supabase لتظهر على الأجهزة المختلفة. صدّر نسخة احتياطية بانتظام للاحتفاظ بنسخة إضافية.</p>
+    </div>
+    <div class="panel">
+      <h2>📋 قائمة الطلاب</h2>
+      <div class="tools">
+        <input id="search" placeholder="ابحث بالاسم أو رقم الطالب..." aria-label="بحث عن طالب">
+        <select id="sort"><option value="default">الترتيب الافتراضي</option><option value="averageDesc">المعدل: من الأعلى للأقل</option><option value="averageAsc">المعدل: من الأقل للأعلى</option><option value="nameAsc">الاسم: أبجديًا</option><option value="idAsc">رقم الطالب: تصاعديًا</option></select>
+        <select id="statusFilter"><option value="all">كل الطلاب</option><option value="pass">الناجحون فقط</option><option value="fail">الراسبون فقط</option></select>
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>الترتيب</th><th>الرقم</th><th>الاسم</th><th>المعدل</th><th>التقدير</th><th>النتيجة</th><th>الإجراءات</th></tr></thead><tbody id="studentRows"></tbody></table><div id="empty" class="empty">لا يوجد طلاب بعد. أضف أول طالب من النموذج.</div></div>
+      <p class="note">علامة النجاح الافتراضية هي 50 من 100 في المعدل العام. يمكنك تعديلها من السطر المخصص داخل الكود إذا احتجت ذلك.</p>
+    </div>
+  </section>
+  <footer>نظام علي عوض لإدارة الطلاب · حفظ سحابي عبر Supabase</footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  "use strict";
+  // رابط المشروع الأساسي (بدون /rest/v1/) ومفتاح Publishable من Supabase.
+  const SUPABASE_URL = "https://totiymvoxwoyzteibvus.supabase.co";
+  const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_E5QhRc8n9c3Mn8kklm-2kg_4uiKH-l0";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+  const loginScreen = document.getElementById("loginScreen");
+  const loginForm = document.getElementById("loginForm");
+  const loginError = document.getElementById("loginError");
+  function showApp() { loginScreen.style.display = "none"; }
+  function showLoginError(message) { loginError.textContent = message; loginError.style.display = "block"; }
+  (async () => {
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (!error && data.session) {
+      showApp();
+      await loadStudentsFromCloud();
+    }
+  })();
+  loginForm.addEventListener("submit", async function(e) {
+    e.preventDefault();
+    const email = document.getElementById("adminUser").value.trim();
+    const password = document.getElementById("adminPass").value;
+    const submitButton = loginForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    submitButton.textContent = "جارٍ تسجيل الدخول...";
+    loginError.style.display = "none";
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
+    submitButton.disabled = false;
+    submitButton.textContent = "دخول إلى لوحة الإدارة";
+    if (error) {
+      showLoginError(error.message === "Invalid login credentials" ? "البريد الإلكتروني أو كلمة المرور غير صحيحة، أو أن المستخدم غير موجود في Supabase." : "تعذّر تسجيل الدخول: " + error.message);
+      document.getElementById("adminPass").value = "";
+      return;
+    }
+    loginError.style.display = "none";
+    showApp();
+    await loadStudentsFromCloud();
+  });
+  document.getElementById("logoutBtn").addEventListener("click", async function() {
+    await supabaseClient.auth.signOut();
+    loginScreen.style.display = "flex";
+    loginForm.reset();
+  });
+
+  const KEY = "ali_awad_student_manager_v2";
+  const PASS_MARK = 50;
+  const subjects = ["math","english","arabic","science","computer"];
+  const $ = id => document.getElementById(id);
+  let students = [];
+  let editingId = null;
+  try {
+    const saved = localStorage.getItem(KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) students = parsed.map(normalizeStudent).filter(Boolean);
+    } else {
+      // Import records from the earlier version if it used one of these common keys.
+      for (const oldKey of ["students","studentData","student_management_students","aliAwadStudents"]) {
+        try {
+          const oldData = JSON.parse(localStorage.getItem(oldKey) || "null");
+          if (Array.isArray(oldData)) { students = oldData.map(normalizeStudent).filter(Boolean); break; }
+        } catch (_) {}
+      }
+    }
+  } catch (_) { students = []; }
+
+  function normalizeStudent(s) {
+    if (!s || typeof s !== "object") return null;
+    const id = String(s.id ?? s.studentId ?? s.number ?? "").trim();
+    const name = String(s.name ?? s.studentName ?? "").trim();
+    if (!id || !name) return null;
+    const rawGrades = s.grades || s.marks || s;
+    const grades = {};
+    for (const key of subjects) {
+      const aliases = {math:["math","رياضيات"],english:["english","انجليزي","إنجليزي"],arabic:["arabic","عربي"],science:["science","علوم"],computer:["computer","حاسوب"]}[key];
+      let value = 0;
+      for (const alias of aliases) if (rawGrades[alias] !== undefined) { value = Number(rawGrades[alias]); break; }
+      grades[key] = Number.isFinite(value) ? Math.min(100,Math.max(0,value)) : 0;
+    }
+    return {id,name,grades,createdAt:Number(s.createdAt)||Date.now()};
+  }
+  function average(s) { return subjects.reduce((sum,k)=>sum+Number(s.grades[k]||0),0)/subjects.length; }
+  function isPass(s) { return average(s) >= PASS_MARK; }
+  function saveLocalCache() {
+    try { localStorage.setItem(KEY, JSON.stringify(students)); return true; }
+    catch (_) { return false; }
+  }
+  function toDatabaseRow(s) {
+    return {
+      student_number: String(s.id),
+      student_name: s.name,
+      grades: s.grades,
+      average: Number(average(s).toFixed(2))
+    };
+  }
+  function fromDatabaseRow(row) {
+    const normalized = normalizeStudent({
+      id: row.student_number,
+      name: row.student_name,
+      grades: row.grades,
+      createdAt: row.created_at ? Date.parse(row.created_at) : Date.now()
+    });
+    return normalized;
+  }
+  async function loadStudentsFromCloud() {
+    showMessage("جارٍ تحميل بيانات الطلاب من قاعدة البيانات...");
+    const { data, error } = await supabaseClient
+      .from("students")
+      .select("student_number, student_name, grades, average, created_at")
+      .order("created_at", { ascending: true });
+    if (error) {
+      showMessage("تعذّر تحميل الطلاب من Supabase: " + error.message + " — تأكد من إعداد صلاحيات الجدول.", "err");
+      render();
+      return;
+    }
+    const cloudStudents = (data || []).map(fromDatabaseRow).filter(Boolean);
+    if (cloudStudents.length === 0 && students.length > 0) {
+      const migrate = confirm("قاعدة بيانات Supabase فارغة، لكن يوجد طلاب محفوظون على هذا المتصفح. هل تريد رفعهم إلى قاعدة البيانات حتى يظهروا على الأجهزة الأخرى؟");
+      if (migrate) {
+        const { error: uploadError } = await supabaseClient.from("students").upsert(students.map(toDatabaseRow), { onConflict: "student_number" });
+        if (uploadError) {
+          showMessage("لم تنجح عملية نقل الطلاب إلى Supabase: " + uploadError.message, "err");
+          render();
+          return;
+        }
+        showMessage("تم نقل الطلاب إلى قاعدة البيانات المشتركة بنجاح.");
+      } else {
+        students = [];
+      }
+    } else {
+      students = cloudStudents;
+    }
+    saveLocalCache();
+    render();
+    if (!cloudStudents.length && !students.length) showMessage("تم الاتصال بقاعدة البيانات. لا يوجد طلاب محفوظون بعد.");
+    else if (cloudStudents.length) showMessage("تم تحميل الطلاب من قاعدة البيانات المشتركة.");
+  }
+  async function saveStudentToCloud(student) {
+    const { error } = await supabaseClient.from("students").upsert(toDatabaseRow(student), { onConflict: "student_number" });
+    if (error) throw error;
+  }
+  async function deleteStudentFromCloud(studentId) {
+    const { error } = await supabaseClient.from("students").delete().eq("student_number", String(studentId));
+    if (error) throw error;
+  }
+  function showMessage(text,type="ok") {
+    const box=$("message"); box.textContent=text; box.className="message show "+type;
+    window.clearTimeout(showMessage.timer); showMessage.timer=window.setTimeout(()=>box.className="message",4000);
+  }
+  function gradeLabel(avg) {
+    if(avg>=90)return "ممتاز"; if(avg>=80)return "جيد جدًا"; if(avg>=70)return "جيد"; if(avg>=60)return "متوسط"; if(avg>=PASS_MARK)return "مقبول"; return "ضعيف";
+  }
+  function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+  }
+  function render() {
+    $("count").textContent=students.length;
+    $("classAverage").textContent=students.length ? (students.reduce((a,s)=>a+average(s),0)/students.length).toFixed(2) : "0.00";
+    $("passed").textContent=students.filter(isPass).length;
+    $("failed").textContent=students.filter(s=>!isPass(s)).length;
+    const q=$("search").value.trim().toLocaleLowerCase();
+    const filter=$("statusFilter").value;
+    let list=students.filter(s=>(s.name.toLocaleLowerCase().includes(q)||s.id.toLocaleLowerCase().includes(q))&&(filter==="all"||(filter==="pass"&&isPass(s))||(filter==="fail"&&!isPass(s))));
+    const sort=$("sort").value;
+    if(sort==="averageDesc")list.sort((a,b)=>average(b)-average(a));
+    else if(sort==="averageAsc")list.sort((a,b)=>average(a)-average(b));
+    else if(sort==="nameAsc")list.sort((a,b)=>a.name.localeCompare(b.name,"ar"));
+    else if(sort==="idAsc")list.sort((a,b)=>a.id.localeCompare(b.id,"ar",{numeric:true}));
+    else list.sort((a,b)=>a.createdAt-b.createdAt);
+    $("studentRows").innerHTML=list.map((s,i)=>`<tr>
+      <td>${i+1}</td><td>${escapeHtml(s.id)}</td><td>${escapeHtml(s.name)}</td>
+      <td><strong>${average(s).toFixed(2)}</strong></td><td>${gradeLabel(average(s))}</td>
+      <td><span class="pill ${isPass(s)?"pass":"fail"}">${isPass(s)?"ناجح":"راسب"}</span></td>
+      <td><div class="row-actions"><button class="secondary" data-edit="${escapeHtml(s.id)}">تعديل</button><button class="danger" data-delete="${escapeHtml(s.id)}">حذف</button></div></td>
+    </tr>`).join("");
+    $("empty").style.display=list.length?"none":"block";
+    $("empty").textContent=students.length?"لا توجد نتائج مطابقة للبحث أو التصفية.":"لا يوجد طلاب بعد. أضف أول طالب من النموذج.";
+  }
+  function clearForm() {
+    editingId=null; $("studentForm").reset();
+    subjects.forEach(k=>$(k).value="0");
+    $("studentId").disabled=false; $("formTitle").textContent="➕ إضافة طالب جديد";
+    $("saveBtn").textContent="حفظ الطالب"; $("cancelEdit").hidden=true;
+  }
+  function fillForm(s) {
+    editingId=s.id; $("studentId").value=s.id; $("studentName").value=s.name;
+    subjects.forEach(k=>$(k).value=s.grades[k]);
+    $("studentId").disabled=true; $("formTitle").textContent="✏️ تعديل بيانات الطالب";
+    $("saveBtn").textContent="حفظ التعديلات"; $("cancelEdit").hidden=false;
+    $("studentName").focus(); window.scrollTo({top:0,behavior:"smooth"});
+  }
+  $("studentForm").addEventListener("submit",async e=>{
+    e.preventDefault();
+    const id=$("studentId").value.trim(), name=$("studentName").value.trim();
+    const grades={};
+    for(const k of subjects){const n=Number($(k).value);if(!Number.isFinite(n)||n<0||n>100){showMessage("تأكد أن كل علامة بين 0 و100.","err");return;}grades[k]=n;}
+    if(!id||!name){showMessage("يرجى إدخال رقم الطالب واسمه.","err");return;}
+    if(editingId){
+      const index=students.findIndex(s=>s.id===editingId);
+      if(index<0){showMessage("لم يتم العثور على الطالب المطلوب تعديله.","err");clearForm();return;}
+      const updated={...students[index],name,grades};
+      const button=$("saveBtn"); button.disabled=true;
+      try {
+        await saveStudentToCloud(updated);
+        students[index]=updated; saveLocalCache(); clearForm(); render(); showMessage("تم تحديث بيانات الطالب وحفظها في قاعدة البيانات.");
+      } catch (error) {
+        showMessage("لم يتم حفظ التعديل في قاعدة البيانات: " + error.message, "err");
+      } finally { button.disabled=false; }
+    } else {
+      if(students.some(s=>s.id===id)){showMessage("رقم الطالب موجود مسبقًا. استخدم رقمًا مختلفًا.","err");return;}
+      const newStudent={id,name,grades,createdAt:Date.now()};
+      const button=$("saveBtn"); button.disabled=true;
+      try {
+        await saveStudentToCloud(newStudent);
+        students.push(newStudent); saveLocalCache(); clearForm(); render(); showMessage("تم حفظ الطالب في قاعدة البيانات المشتركة.");
+      } catch (error) {
+        showMessage("لم يتم حفظ الطالب في قاعدة البيانات: " + error.message, "err");
+      } finally { button.disabled=false; }
+    }
+  });
+  $("cancelEdit").addEventListener("click",clearForm);
+  $("studentRows").addEventListener("click",async e=>{
+    const edit=e.target.closest("[data-edit]"), del=e.target.closest("[data-delete]");
+    if(edit){const s=students.find(x=>x.id===edit.dataset.edit);if(s)fillForm(s);}
+    if(del){const id=del.dataset.delete, s=students.find(x=>x.id===id);if(!s)return;
+      if(confirm(`هل أنت متأكد أنك تريد حذف الطالب "${s.name}"؟`)){
+        try {
+          await deleteStudentFromCloud(id);
+          students=students.filter(x=>x.id!==id);if(editingId===id)clearForm();saveLocalCache();render();showMessage("تم حذف الطالب من قاعدة البيانات.");
+        } catch (error) {
+          showMessage("لم يتم حذف الطالب من قاعدة البيانات: " + error.message, "err");
+        }
+      }
+    }
+  });
+  $("search").addEventListener("input",render); $("sort").addEventListener("change",render); $("statusFilter").addEventListener("change",render);
+  $("exportBtn").addEventListener("click",()=>{
+    const payload={app:"نظام علي عوض لإدارة الطلاب",version:2,exportedAt:new Date().toISOString(),students};
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json;charset=utf-8"});
+    const url=URL.createObjectURL(blob),a=document.createElement("a");
+    a.href=url;a.download="نسخة-احتياطية-طلاب-علي-عوض.json";document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);
+    showMessage("تم تجهيز ملف النسخة الاحتياطية.");
+  });
+  $("importBtn").addEventListener("click",()=>$("fileInput").click());
+  $("fileInput").addEventListener("change",async e=>{
+    const file=e.target.files[0];if(!file)return;
+    try{
+      const data=JSON.parse(await file.text());
+      const raw=Array.isArray(data)?data:data.students;
+      if(!Array.isArray(raw))throw new Error("invalid");
+      const imported=raw.map(normalizeStudent).filter(Boolean);
+      if(imported.length!==raw.length)throw new Error("invalidRows");
+      const ids=new Set();for(const s of imported){if(ids.has(s.id))throw new Error("duplicate");ids.add(s.id);}
+      if(!confirm(`سيتم استبدال قائمة الطلاب الحالية بـ ${imported.length} طالبًا من النسخة الاحتياطية. هل تريد المتابعة؟`))return;
+      const { error: importError } = await supabaseClient.from("students").upsert(imported.map(toDatabaseRow), { onConflict: "student_number" });
+      if (importError) throw importError;
+      students=imported;saveLocalCache();clearForm();render();showMessage("تم رفع بيانات النسخة الاحتياطية إلى قاعدة البيانات.");
+    }catch(err){
+      showMessage(err.message==="duplicate"?"النسخة الاحتياطية تحتوي على أرقام طلاب مكررة.":"الملف غير صالح أو لا يحتوي على بيانات طلاب مفهومة.","err");
+    }finally{e.target.value="";}
+  });
+  render();
+})();
+</script>
+</body>
+</html>
